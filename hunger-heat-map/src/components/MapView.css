@@ -1,0 +1,544 @@
+/* Map Container */
+.map-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--color-bg);
+}
+
+/* Map Controls */
+.map-controls {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  height: fit-content;
+}
+
+.add-report-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 100%
+  );
+  color: var(--color-white);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
+.add-report-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+}
+
+.control-group {
+  margin-bottom: 20px;
+}
+
+.control-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.map-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.map-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+/* Legend */
+.legend {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.legend h4 {
+  margin: 0 0 16px 0;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.legend-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+/* Map Wrapper */
+.map-wrapper {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: var(--color-white);
+}
+
+.leaflet-map {
+  height: 100%;
+  width: 100%;
+}
+
+/* Custom Map Tiles */
+.map-tiles {
+  filter: grayscale(20%) contrast(1.1) brightness(0.95);
+}
+
+/* Custom Markers */
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-marker {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: marker-pulse 2s ease-in-out infinite;
+}
+
+.custom-marker.high {
+  background: var(--color-alert-high);
+  border: 3px solid rgba(229, 57, 53, 0.3);
+}
+
+.custom-marker.medium {
+  background: var(--color-alert-medium);
+  border: 3px solid rgba(251, 140, 0, 0.3);
+}
+
+.custom-marker.low {
+  background: var(--color-alert-low);
+  border: 3px solid rgba(253, 216, 53, 0.3);
+}
+
+.marker-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.6;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes marker-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Map Popup */
+.map-popup {
+  padding: 16px;
+  min-width: 200px;
+}
+
+.map-popup h3 {
+  margin: 0 0 12px 0;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.map-popup p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.severity-high {
+  color: var(--color-alert-high);
+  font-weight: 600;
+}
+.severity-medium {
+  color: var(--color-alert-medium);
+  font-weight: 600;
+}
+.severity-low {
+  color: var(--color-alert-low);
+  font-weight: 600;
+}
+
+.popup-action {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s ease;
+}
+
+.popup-action:hover {
+  background: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+
+/* Map Overlay Stats */
+.map-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.map-stats {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  gap: 24px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .map-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+
+  .map-controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .control-group {
+    margin-bottom: 0;
+    min-width: 150px;
+  }
+
+  .legend {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+    padding-left: 20px;
+  }
+
+  .map-stats {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .map-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-group {
+    margin-bottom: 16px;
+  }
+
+  .legend {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    padding-left: 0;
+    padding-top: 16px;
+  }
+
+  .map-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Map Report Modal */
+.map-report-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  background: var(--color-white);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
+  color: var(--color-white);
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+/* Quick Report Form */
+.quick-report-form {
+  display: grid;
+  gap: 16px;
+}
+
+.quick-report-form .form-group {
+  margin-bottom: 0;
+}
+
+.quick-report-form label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.quick-report-form input,
+.quick-report-form textarea,
+.quick-report-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.quick-report-form input:focus,
+.quick-report-form textarea:focus,
+.quick-report-form select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+.quick-report-form input.error,
+.quick-report-form textarea.error {
+  border-color: var(--color-alert-high);
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
+}
+
+.quick-report-form .error-message {
+  color: var(--color-alert-high);
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.quick-report-form .form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.quick-report-form .cancel-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--color-border);
+  color: var(--color-text);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-report-form .cancel-btn:hover {
+  background: #d1d5db;
+}
+
+.quick-report-form .submit-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 100%
+  );
+  color: var(--color-white);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
+.quick-report-form .submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .map-report-modal {
+    padding: 10px;
+  }
+
+  .modal-content {
+    max-width: 100%;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+}

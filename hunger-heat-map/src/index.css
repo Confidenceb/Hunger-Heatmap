@@ -37,6 +37,75 @@ body {
   background: #ffffff;
 }
 
+/* Global motion + transitions */
+html {
+  scroll-behavior: smooth;
+}
+
+a,
+button,
+.cta-button {
+  transition: color 0.2s ease, background-color 0.25s ease, transform 0.25s ease,
+    box-shadow 0.25s ease, opacity 0.25s ease;
+}
+
+/* Reusable animation utilities */
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.22, 0.7, 0.26, 1) both;
+}
+.animate-slide-down {
+  animation: slide-down 0.5s ease-out both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  a,
+  button,
+  .cta-button {
+    transition: none;
+  }
+  .animate-fade-in,
+  .animate-fade-up,
+  .animate-slide-down {
+    animation: none;
+  }
+}
+
 .section {
   max-width: 1180px;
   margin: 0 auto;

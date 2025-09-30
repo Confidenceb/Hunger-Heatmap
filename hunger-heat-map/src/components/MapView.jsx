@@ -1,0 +1,463 @@
+import { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "./MapView.css";
+
+// Quick Report Form Component
+function QuickReportForm({ initialData, onSubmit, onCancel }) {
+  const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
+    if (!formData.affectedCount || parseInt(formData.affectedCount) <= 0) {
+      newErrors.affectedCount = "Please enter a valid number";
+    }
+    if (!formData.contactInfo.trim())
+      newErrors.contactInfo = "Contact info is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(formData);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="quick-report-form">
+      <div className="form-group">
+        <label>Location</label>
+        <input
+          type="text"
+          name="location"
+          value={formData.location}
+          onChange={handleInputChange}
+          placeholder="Enter location"
+          className={errors.location ? "error" : ""}
+        />
+        {errors.location && (
+          <span className="error-message">{errors.location}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label>Severity</label>
+        <select
+          name="severity"
+          value={formData.severity}
+          onChange={handleInputChange}
+        >
+          <option value="low">Low (Mild)</option>
+          <option value="medium">Medium (Moderate)</option>
+          <option value="high">High (Critical)</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Description *</label>
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          placeholder="Describe the hunger situation..."
+          rows="3"
+          className={errors.description ? "error" : ""}
+        />
+        {errors.description && (
+          <span className="error-message">{errors.description}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label>People Affected *</label>
+        <input
+          type="number"
+          name="affectedCount"
+          value={formData.affectedCount}
+          onChange={handleInputChange}
+          placeholder="e.g., 50"
+          min="1"
+          className={errors.affectedCount ? "error" : ""}
+        />
+        {errors.affectedCount && (
+          <span className="error-message">{errors.affectedCount}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label>Your Contact *</label>
+        <input
+          type="text"
+          name="contactInfo"
+          value={formData.contactInfo}
+          onChange={handleInputChange}
+          placeholder="Phone or email"
+          className={errors.contactInfo ? "error" : ""}
+        />
+        {errors.contactInfo && (
+          <span className="error-message">{errors.contactInfo}</span>
+        )}
+      </div>
+
+      <div className="form-actions">
+        <button type="button" onClick={onCancel} className="cancel-btn">
+          Cancel
+        </button>
+        <button type="submit" className="submit-btn">
+          Submit Report
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// Fix for default markers in Leaflet with Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+function MapView({ onReportSubmit }) {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const [selectedSeverity, setSelectedSeverity] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [clickedLocation, setClickedLocation] = useState(null);
+  const [reportFormData, setReportFormData] = useState({
+    location: "",
+    latitude: "",
+    longitude: "",
+    severity: "medium",
+    description: "",
+    affectedCount: "",
+    contactInfo: "",
+    urgency: "normal",
+    category: "food",
+  });
+
+  // Sample data - replace with real API data
+  const hungerData = [
+    {
+      lat: 40.7128,
+      lng: -74.006,
+      severity: "high",
+      type: "hotspot",
+      name: "Downtown NYC",
+      reports: 15,
+    },
+    {
+      lat: 40.7589,
+      lng: -73.9851,
+      severity: "medium",
+      type: "ngo",
+      name: "Food Bank NYC",
+      reports: 8,
+    },
+    {
+      lat: 40.7505,
+      lng: -73.9934,
+      severity: "low",
+      type: "volunteer",
+      name: "Community Center",
+      reports: 3,
+    },
+    {
+      lat: 40.7282,
+      lng: -73.7949,
+      severity: "high",
+      type: "hotspot",
+      name: "Queens District",
+      reports: 22,
+    },
+    {
+      lat: 40.6892,
+      lng: -73.9442,
+      severity: "medium",
+      type: "donor",
+      name: "Restaurant Chain",
+      reports: 5,
+    },
+  ];
+
+  const severityColors = {
+    high: "#e53935", // --color-alert-high
+    medium: "#fb8c00", // --color-alert-medium
+    low: "#fdd835", // --color-alert-low
+  };
+
+  const typeIcons = {
+    hotspot: "🔥",
+    ngo: "🏢",
+    volunteer: "👥",
+    donor: "🍽️",
+  };
+
+  useEffect(() => {
+    if (mapRef.current && !mapInstanceRef.current) {
+      // Initialize map
+      const map = L.map(mapRef.current).setView([40.7128, -74.006], 11);
+      mapInstanceRef.current = map;
+
+      // Add tile layer
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        className: "map-tiles",
+      }).addTo(map);
+
+      // Add click event to map
+      map.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+        setClickedLocation({ lat, lng });
+        setReportFormData((prev) => ({
+          ...prev,
+          latitude: lat.toFixed(6),
+          longitude: lng.toFixed(6),
+          location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        }));
+        setShowReportForm(true);
+      });
+
+      // Add markers
+      addMarkersToMap(map);
+
+      return () => {
+        map.remove();
+        mapInstanceRef.current = null;
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      // Clear existing markers
+      mapInstanceRef.current.eachLayer((layer) => {
+        if (layer instanceof L.Marker) {
+          mapInstanceRef.current.removeLayer(layer);
+        }
+      });
+
+      // Add filtered markers
+      addMarkersToMap(mapInstanceRef.current);
+    }
+  }, [selectedSeverity, selectedType]);
+
+  const addMarkersToMap = (map) => {
+    const filteredData = hungerData.filter((item) => {
+      const severityMatch =
+        selectedSeverity === "all" || item.severity === selectedSeverity;
+      const typeMatch = selectedType === "all" || item.type === selectedType;
+      return severityMatch && typeMatch;
+    });
+
+    filteredData.forEach((point) => {
+      const customIcon = L.divIcon({
+        html: `<div class="custom-marker ${point.severity} ${point.type}">
+                 <span class="marker-icon">${typeIcons[point.type]}</span>
+                 <span class="marker-pulse"></span>
+               </div>`,
+        className: "custom-div-icon",
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+
+      const marker = L.marker([point.lat, point.lng], {
+        icon: customIcon,
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <div class="map-popup">
+          <h3>${point.name}</h3>
+          <p><strong>Type:</strong> ${point.type}</p>
+          <p><strong>Severity:</strong> <span class="severity-${point.severity}">${point.severity}</span></p>
+          <p><strong>Reports:</strong> ${point.reports}</p>
+          <button class="popup-action">View Details</button>
+        </div>
+      `);
+    });
+  };
+
+  const handleReportSubmit = (formData) => {
+    const reportData = {
+      ...formData,
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      status: "pending",
+      verified: false,
+    };
+
+    if (onReportSubmit) {
+      onReportSubmit(reportData);
+    }
+
+    setShowReportForm(false);
+    setReportFormData({
+      location: "",
+      latitude: "",
+      longitude: "",
+      severity: "medium",
+      description: "",
+      affectedCount: "",
+      contactInfo: "",
+      urgency: "normal",
+      category: "food",
+    });
+  };
+
+  const handleManualReport = () => {
+    setClickedLocation(null);
+    setReportFormData({
+      location: "",
+      latitude: "",
+      longitude: "",
+      severity: "medium",
+      description: "",
+      affectedCount: "",
+      contactInfo: "",
+      urgency: "normal",
+      category: "food",
+    });
+    setShowReportForm(true);
+  };
+
+  return (
+    <div className="map-container">
+      <div className="map-controls">
+        <div className="control-group">
+          <label>Severity Filter:</label>
+          <select
+            value={selectedSeverity}
+            onChange={(e) => setSelectedSeverity(e.target.value)}
+            className="map-select"
+          >
+            <option value="all">All Levels</option>
+            <option value="high">High (Critical)</option>
+            <option value="medium">Medium (Moderate)</option>
+            <option value="low">Low (Mild)</option>
+          </select>
+        </div>
+
+        <div className="control-group">
+          <label>Type Filter:</label>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="map-select"
+          >
+            <option value="all">All Types</option>
+            <option value="hotspot">Hunger Hotspots</option>
+            <option value="ngo">NGOs</option>
+            <option value="volunteer">Volunteers</option>
+            <option value="donor">Donors</option>
+          </select>
+        </div>
+
+        <div className="control-group">
+          <button onClick={handleManualReport} className="add-report-btn">
+            📝 Add Report
+          </button>
+        </div>
+
+        <div className="legend">
+          <h4>Legend</h4>
+          <div className="legend-item">
+            <span className="legend-icon">🔥</span>
+            <span>Hunger Hotspots</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-icon">🏢</span>
+            <span>NGOs</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-icon">👥</span>
+            <span>Volunteers</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-icon">🍽️</span>
+            <span>Donors</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="map-wrapper">
+        <div ref={mapRef} className="leaflet-map"></div>
+        <div className="map-overlay">
+          <div className="map-stats">
+            <div className="stat-item">
+              <span className="stat-number">
+                {hungerData.filter((d) => d.type === "hotspot").length}
+              </span>
+              <span className="stat-label">Active Hotspots</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-number">
+                {hungerData.filter((d) => d.type === "ngo").length}
+              </span>
+              <span className="stat-label">NGOs</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-number">
+                {hungerData.filter((d) => d.type === "volunteer").length}
+              </span>
+              <span className="stat-label">Volunteers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showReportForm && (
+        <div className="map-report-modal">
+          <div
+            className="modal-overlay"
+            onClick={() => setShowReportForm(false)}
+          ></div>
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Report Hunger Hotspot</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowReportForm(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <QuickReportForm
+                initialData={reportFormData}
+                onSubmit={handleReportSubmit}
+                onCancel={() => setShowReportForm(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MapView;
