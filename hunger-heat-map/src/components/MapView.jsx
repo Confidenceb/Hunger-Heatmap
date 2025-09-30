@@ -149,6 +149,9 @@ function MapView({ onReportSubmit }) {
   const [selectedType, setSelectedType] = useState("all");
   const [showReportForm, setShowReportForm] = useState(false);
   const [clickedLocation, setClickedLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationPermission, setLocationPermission] = useState(null); // null, 'granted', 'denied', 'requesting'
+  const [showBanner, setShowBanner] = useState(false);
   const [reportFormData, setReportFormData] = useState({
     location: "",
     latitude: "",
@@ -218,9 +221,80 @@ function MapView({ onReportSubmit }) {
     donor: "🍽️",
   };
 
+  // Auto-dismiss banner after 3 seconds
+  useEffect(() => {
+    if (locationPermission && locationPermission !== "requesting") {
+      setShowBanner(true);
+      const timer = setTimeout(() => {
+        setShowBanner(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [locationPermission]);
+
+  // Request user location permission and get location
+  const requestUserLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationPermission("denied");
+      return;
+    }
+
+    setLocationPermission("requesting");
+    setShowBanner(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const location = { lat: latitude, lng: longitude };
+
+        setUserLocation(location);
+        setLocationPermission("granted");
+
+        // Center map on user location
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([latitude, longitude], 13);
+
+          // Add user location marker
+          const userIcon = L.divIcon({
+            html: `<div class="user-location-marker">
+                     <div class="user-marker-pulse"></div>
+                     <div class="user-marker-center">📍</div>
+                   </div>`,
+            className: "user-div-icon",
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+          });
+
+          L.marker([latitude, longitude], { icon: userIcon }).addTo(
+            mapInstanceRef.current
+          ).bindPopup(`
+              <div class="user-location-popup">
+                <h4>Your Location</h4>
+                <p>You are here</p>
+                <button onclick="navigator.geolocation.getCurrentPosition((pos) => {
+                  const { latitude, longitude } = pos.coords;
+                  window.open(\`https://www.google.com/maps?q=\${latitude},\${longitude}\`, '_blank');
+                })" class="view-on-maps-btn">View on Google Maps</button>
+              </div>
+            `);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setLocationPermission("denied");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes
+      }
+    );
+  };
+
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      // Initialize map
+      // Initialize map with default location (will be updated if user grants permission)
       const map = L.map(mapRef.current).setView([40.7128, -74.006], 11);
       mapInstanceRef.current = map;
 
@@ -245,6 +319,11 @@ function MapView({ onReportSubmit }) {
 
       // Add markers
       addMarkersToMap(map);
+
+      // Request user location after map is initialized
+      setTimeout(() => {
+        requestUserLocation();
+      }, 1000);
 
       return () => {
         map.remove();
@@ -347,6 +426,82 @@ function MapView({ onReportSubmit }) {
 
   return (
     <div className="map-container">
+      {/* Location Permission Banner */}
+      {locationPermission === "requesting" && showBanner && (
+        <div className="location-banner requesting">
+          <div className="banner-content">
+            <div className="banner-icon">📍</div>
+            <div className="banner-text">
+              <h4>Getting your location...</h4>
+              <p>Please allow location access to center the map on your area</p>
+            </div>
+            <div className="banner-spinner"></div>
+          </div>
+        </div>
+      )}
+
+      {locationPermission === "denied" && showBanner && (
+        <div className="location-banner denied">
+          <div className="banner-content">
+            <div className="banner-icon">🚫</div>
+            <div className="banner-text">
+              <h4>Location access denied</h4>
+              <p>
+                You can still use the map, but it won't center on your location
+              </p>
+            </div>
+            <div className="banner-actions">
+              <button
+                onClick={requestUserLocation}
+                className="retry-location-btn"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => setShowBanner(false)}
+                className="close-banner-btn"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {locationPermission === "granted" && userLocation && showBanner && (
+        <div className="location-banner granted">
+          <div className="banner-content">
+            <div className="banner-icon">✅</div>
+            <div className="banner-text">
+              <h4>Location found!</h4>
+              <p>Map centered on your location</p>
+            </div>
+            <div className="banner-actions">
+              <button
+                onClick={() => {
+                  if (mapInstanceRef.current) {
+                    mapInstanceRef.current.setView(
+                      [userLocation.lat, userLocation.lng],
+                      13
+                    );
+                  }
+                  setShowBanner(false); // Hide banner immediately when clicked
+                }}
+                className="center-location-btn"
+              >
+                Center Map
+              </button>
+              <button
+                onClick={() => setShowBanner(false)}
+                className="close-banner-btn"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="map-controls">
         <div className="control-group">
           <label>Severity Filter:</label>
@@ -380,6 +535,12 @@ function MapView({ onReportSubmit }) {
         <div className="control-group">
           <button onClick={handleManualReport} className="add-report-btn">
             📝 Add Report
+          </button>
+        </div>
+
+        <div className="control-group">
+          <button onClick={requestUserLocation} className="location-btn">
+            📍 {userLocation ? "Update Location" : "Get My Location"}
           </button>
         </div>
 
