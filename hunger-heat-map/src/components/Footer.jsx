@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import "./Footer.css";
 
 function Footer() {
+  const handleLinkClick = () => {
+    // Scroll to top when navigating
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -66,28 +70,44 @@ function Footer() {
             <h3 className="footer-title">Quick Links</h3>
             <ul className="footer-links">
               <li>
-                <Link to="/" className="footer-link">
+                <Link to="/" className="footer-link" onClick={handleLinkClick}>
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="footer-link">
+                <Link
+                  to="/about"
+                  className="footer-link"
+                  onClick={handleLinkClick}
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/map" className="footer-link">
+                <Link
+                  to="/map"
+                  className="footer-link"
+                  onClick={handleLinkClick}
+                >
                   Hunger Map
                 </Link>
               </li>
               <li>
-                <Link to="/report" className="footer-link">
+                <Link
+                  to="/report"
+                  className="footer-link"
+                  onClick={handleLinkClick}
+                >
                   Report Hunger
                 </Link>
               </li>
               <li>
-                <Link to="/how-it-works" className="footer-link">
-                  How It Works
+                <Link
+                  to="/contact"
+                  className="footer-link"
+                  onClick={handleLinkClick}
+                >
+                  Contact
                 </Link>
               </li>
             </ul>

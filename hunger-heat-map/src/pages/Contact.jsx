@@ -99,7 +99,7 @@ function Contact() {
         <div className="container">
           <div className="contact-hero-content">
             <h1>Get in Touch</h1>
-            <p className="hero-subtitle">
+            <p className="contact-hero-subtitle">
               Have questions about Hunger HeatMap? Want to partner with us or
               volunteer? We'd love to hear from you.
             </p>
