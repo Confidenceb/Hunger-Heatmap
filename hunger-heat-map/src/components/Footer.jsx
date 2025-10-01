@@ -193,7 +193,7 @@ function Footer() {
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <div className="footer-copyright">
-              <p>&copy; 2024 Hunger HeatMap. All rights reserved.</p>
+              <p>&copy; 2025 Hunger HeatMap. All rights reserved.</p>
             </div>
             <div className="footer-legal">
               <a href="#" className="legal-link">
