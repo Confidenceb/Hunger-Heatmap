@@ -2,9 +2,6 @@
 
 **Hunger HeatMap** is a crowdsourced, data-driven platform that visualizes areas affected by food scarcity and hunger in real time — helping NGOs, volunteers, and government agencies respond faster and smarter.
 
-![Hunger HeatMap Banner](https://via.placeholder.com/1200x300.png?text=Hunger+HeatMap+Banner)
-*(Replace this with your project banner later)*
-
 ### 🌍 **Overview**
 
 Across many communities, hunger remains invisible until it becomes a crisis. Hunger HeatMap aims to change that by providing a **real-time, map-based view of hunger incidents**.
@@ -34,20 +31,16 @@ Think of it as a **“Google Maps for hunger emergencies.”**
 | --------- | ----------------------- |
 | Frontend  | React + Tailwind CSS    |
 | Backend   | Node.js + Express       |
-| Database  | PostgreSQL / MongoDB    |
 | Map API   | Leaflet.js or Mapbox    |
 
 
 ### 📂 **Project Structure**
 
 Hunger-HeatMap/
-├── client/              # React frontend
+├── hunger-heat-map/              # React frontend
 │   ├── public/
 │   └── src/
-├── server/              # Node.js backend
-│   ├── routes/
-│   ├── controllers/
-│   └── models/
+├── server/
 ├── .gitignore
 ├── README.md
 ├── package.json
