@@ -482,8 +482,21 @@
   }
 
   .map-stats {
+    padding: 8px;
+    margin-top: 0;
+
+    display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .stat-item {
+    padding: 2px !important;
+  }
+  .stat-item .stat-number {
+    font-size: 18px !important;
+  }
+  .stat-item .stat-label {
+    font-size: 10px !important;
   }
 }
 
