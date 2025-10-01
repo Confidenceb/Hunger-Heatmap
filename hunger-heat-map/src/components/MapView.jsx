@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapView.css";
@@ -148,7 +148,7 @@ function MapView({ onReportSubmit }) {
   const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [showReportForm, setShowReportForm] = useState(false);
-  const [clickedLocation, setClickedLocation] = useState(null);
+  const [, setClickedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationPermission, setLocationPermission] = useState(null); // null, 'granted', 'denied', 'requesting'
   const [showBanner, setShowBanner] = useState(false);
@@ -164,62 +164,99 @@ function MapView({ onReportSubmit }) {
     category: "food",
   });
 
-  // Sample data - replace with real API data
-  const hungerData = [
+  // Sample data - Lagos, Nigeria locations
+  const initialHungerData = [
     {
-      lat: 40.7128,
-      lng: -74.006,
+      lat: 6.5244,
+      lng: 3.3792,
       severity: "high",
       type: "hotspot",
-      name: "Downtown NYC",
+      name: "Lagos Island",
       reports: 15,
     },
     {
-      lat: 40.7589,
-      lng: -73.9851,
+      lat: 6.4474,
+      lng: 3.3903,
       severity: "medium",
       type: "ngo",
-      name: "Food Bank NYC",
+      name: "Lagos Food Bank",
       reports: 8,
     },
     {
-      lat: 40.7505,
-      lng: -73.9934,
+      lat: 6.6018,
+      lng: 3.3515,
       severity: "low",
       type: "volunteer",
-      name: "Community Center",
+      name: "Victoria Island Center",
       reports: 3,
     },
     {
-      lat: 40.7282,
-      lng: -73.7949,
+      lat: 6.5244,
+      lng: 3.3792,
       severity: "high",
       type: "hotspot",
-      name: "Queens District",
+      name: "Surulere District",
       reports: 22,
     },
     {
-      lat: 40.6892,
-      lng: -73.9442,
+      lat: 6.4474,
+      lng: 3.3903,
       severity: "medium",
       type: "donor",
-      name: "Restaurant Chain",
+      name: "Lagos Restaurant Chain",
       reports: 5,
     },
   ];
 
-  const severityColors = {
-    high: "#e53935", // --color-alert-high
-    medium: "#fb8c00", // --color-alert-medium
-    low: "#fdd835", // --color-alert-low
-  };
+  const [hungerData, setHungerData] = useState(initialHungerData);
 
-  const typeIcons = {
-    hotspot: "🔥",
-    ngo: "🏢",
-    volunteer: "👥",
-    donor: "🍽️",
-  };
+  const typeIcons = useMemo(
+    () => ({
+      hotspot: "🔥",
+      ngo: "🏢",
+      volunteer: "👥",
+      donor: "🍽️",
+    }),
+    []
+  );
+
+  const addMarkersToMap = useCallback(
+    (map) => {
+      const filteredData = hungerData.filter((item) => {
+        const severityMatch =
+          selectedSeverity === "all" || item.severity === selectedSeverity;
+        const typeMatch = selectedType === "all" || item.type === selectedType;
+        return severityMatch && typeMatch;
+      });
+
+      filteredData.forEach((point) => {
+        const customIcon = L.divIcon({
+          html: `<div class="custom-marker ${point.severity} ${point.type}">
+                 <span class="marker-icon">${typeIcons[point.type]}</span>
+                 <span class="marker-pulse"></span>
+               </div>`,
+          className: "custom-div-icon",
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+        });
+
+        const marker = L.marker([point.lat, point.lng], {
+          icon: customIcon,
+        }).addTo(map);
+
+        marker.bindPopup(`
+        <div class="map-popup">
+          <h3>${point.name}</h3>
+          <p><strong>Type:</strong> ${point.type}</p>
+          <p><strong>Severity:</strong> <span class="severity-${point.severity}">${point.severity}</span></p>
+          <p><strong>Reports:</strong> ${point.reports}</p>
+          <button class="popup-action">View Details</button>
+        </div>
+      `);
+      });
+    },
+    [hungerData, selectedSeverity, selectedType, typeIcons]
+  );
 
   // Auto-dismiss banner after 3 seconds
   useEffect(() => {
@@ -294,8 +331,8 @@ function MapView({ onReportSubmit }) {
 
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      // Initialize map with default location (will be updated if user grants permission)
-      const map = L.map(mapRef.current).setView([40.7128, -74.006], 11);
+      // Initialize map with Lagos, Nigeria as default location
+      const map = L.map(mapRef.current).setView([6.5244, 3.3792], 11);
       mapInstanceRef.current = map;
 
       // Add tile layer
@@ -330,7 +367,7 @@ function MapView({ onReportSubmit }) {
         mapInstanceRef.current = null;
       };
     }
-  }, []);
+  }, [addMarkersToMap]);
 
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -344,42 +381,7 @@ function MapView({ onReportSubmit }) {
       // Add filtered markers
       addMarkersToMap(mapInstanceRef.current);
     }
-  }, [selectedSeverity, selectedType]);
-
-  const addMarkersToMap = (map) => {
-    const filteredData = hungerData.filter((item) => {
-      const severityMatch =
-        selectedSeverity === "all" || item.severity === selectedSeverity;
-      const typeMatch = selectedType === "all" || item.type === selectedType;
-      return severityMatch && typeMatch;
-    });
-
-    filteredData.forEach((point) => {
-      const customIcon = L.divIcon({
-        html: `<div class="custom-marker ${point.severity} ${point.type}">
-                 <span class="marker-icon">${typeIcons[point.type]}</span>
-                 <span class="marker-pulse"></span>
-               </div>`,
-        className: "custom-div-icon",
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-      });
-
-      const marker = L.marker([point.lat, point.lng], {
-        icon: customIcon,
-      }).addTo(map);
-
-      marker.bindPopup(`
-        <div class="map-popup">
-          <h3>${point.name}</h3>
-          <p><strong>Type:</strong> ${point.type}</p>
-          <p><strong>Severity:</strong> <span class="severity-${point.severity}">${point.severity}</span></p>
-          <p><strong>Reports:</strong> ${point.reports}</p>
-          <button class="popup-action">View Details</button>
-        </div>
-      `);
-    });
-  };
+  }, [selectedSeverity, selectedType, addMarkersToMap]);
 
   const handleReportSubmit = (formData) => {
     const reportData = {
@@ -389,6 +391,59 @@ function MapView({ onReportSubmit }) {
       status: "pending",
       verified: false,
     };
+
+    // Add the new report as a marker to the map
+    const newMarker = {
+      lat: parseFloat(formData.latitude),
+      lng: parseFloat(formData.longitude),
+      severity: formData.severity,
+      type: "hotspot", // New reports are always hotspots
+      name: formData.location || "New Report",
+      reports: 1,
+      description: formData.description,
+      affectedCount: formData.affectedCount,
+      contactInfo: formData.contactInfo,
+      timestamp: reportData.timestamp,
+    };
+
+    // Add to hunger data state
+    setHungerData((prev) => [...prev, newMarker]);
+
+    // Add marker to map immediately
+    if (mapInstanceRef.current) {
+      const customIcon = L.divIcon({
+        html: `<div class="custom-marker ${newMarker.severity} ${
+          newMarker.type
+        }">
+                 <span class="marker-icon">${typeIcons[newMarker.type]}</span>
+                 <span class="marker-pulse"></span>
+               </div>`,
+        className: "custom-div-icon",
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+
+      const marker = L.marker([newMarker.lat, newMarker.lng], {
+        icon: customIcon,
+      }).addTo(mapInstanceRef.current);
+
+      marker.bindPopup(`
+        <div class="map-popup">
+          <h3>${newMarker.name}</h3>
+          <p><strong>Type:</strong> ${newMarker.type}</p>
+          <p><strong>Severity:</strong> <span class="severity-${
+            newMarker.severity
+          }">${newMarker.severity}</span></p>
+          <p><strong>Description:</strong> ${newMarker.description}</p>
+          <p><strong>People Affected:</strong> ${newMarker.affectedCount}</p>
+          <p><strong>Contact:</strong> ${newMarker.contactInfo}</p>
+          <p><strong>Reported:</strong> ${new Date(
+            newMarker.timestamp
+          ).toLocaleString()}</p>
+          <button class="popup-action">View Details</button>
+        </div>
+      `);
+    }
 
     if (onReportSubmit) {
       onReportSubmit(reportData);
